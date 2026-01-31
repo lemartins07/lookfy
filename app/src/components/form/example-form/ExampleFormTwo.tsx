@@ -8,7 +8,7 @@ import Select from "../Select";
 import Radio from "../input/Radio";
 import Form from "../Form";
 import Button from "../../ui/button/Button";
-import DatePicker from "../date-picker.tsx";
+import DatePicker from "../date-picker";
 
 export default function ExampleFormTwo() {
   const [selectedOption, setSelectedOption] = useState<string>("Free");

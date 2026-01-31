@@ -1,8 +1,14 @@
 "use client";
 
 import { useMemo, useRef, useState, useEffect } from "react";
+import Image from "next/image";
 import ChatBoxHeader from "./ChatBoxHeader";
 import ChatBoxSendForm from "./ChatBoxSendForm";
+import type {
+  ChatMessage,
+  StyleProfile,
+  StyleChatResponse,
+} from "@/lib/contracts/style-chat";
 
 interface ChatItem {
   id: number;
@@ -14,22 +20,70 @@ interface ChatItem {
 }
 
 const assistantProfileImage = "/images/user/user-17.jpg";
-const questions = [
-  "Como você gostaria de ser percebido(a) pelo seu estilo?",
-  "Quais estilos você mais gosta ou se inspira?",
-  "Quais cores você prefere usar no dia a dia? E quais evita?",
-  "Quais ocasiões são mais comuns na sua rotina?",
-  "Você prefere roupas mais ajustadas ou mais soltas?",
-  "Existe algum tecido/peça que você não usa?",
-];
-
 const introMessage =
-  "Oi! Vou fazer algumas perguntas rápidas para entender seu estilo. Responda com texto livre.";
+  "Oi! Me conte sobre seu estilo atual e onde você quer chegar. Vou fazer perguntas se precisar.";
+
+function formatValue(value: string | null | undefined, fallback: string) {
+  if (!value || value.trim().length === 0) {
+    return fallback;
+  }
+  return value;
+}
+
+function formatFormality(value: StyleProfile["formality"]) {
+  if (!value) {
+    return "não informado";
+  }
+  return value;
+}
+
+function buildSummary(summaryProfile: StyleProfile) {
+  return [
+    "Perfeito! Com base nas suas respostas, criei um perfil inicial:",
+    `• Percepção desejada: ${formatValue(
+      summaryProfile.perception,
+      "não informado"
+    )}`,
+    `• Estilos/Referências: ${formatValue(
+      summaryProfile.styles,
+      "não informado"
+    )}`,
+    `• Cores preferidas: ${formatValue(
+      summaryProfile.colorsPreferred,
+      "sem preferência"
+    )}`,
+    `• Cores a evitar: ${formatValue(
+      summaryProfile.colorsAvoid,
+      "sem preferência"
+    )}`,
+    `• Ocasiões frequentes: ${formatValue(
+      summaryProfile.occasions,
+      "não informado"
+    )}`,
+    `• Nível de formalidade: ${formatFormality(summaryProfile.formality)}`,
+    `• Silhuetas preferidas: ${formatValue(
+      summaryProfile.silhouettes,
+      "sem preferência"
+    )}`,
+    `• Materiais preferidos: ${formatValue(
+      summaryProfile.materials,
+      "sem preferência"
+    )}`,
+    `• Peças/tecidos a evitar: ${formatValue(
+      summaryProfile.avoidPieces,
+      "sem preferência"
+    )}`,
+  ].join("\n");
+}
 
 export default function ChatBox() {
   const [input, setInput] = useState("");
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [profile, setProfile] = useState<StyleProfile>({});
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    { role: "assistant", content: introMessage },
+  ]);
   const [messages, setMessages] = useState<ChatItem[]>([
     {
       id: 1,
@@ -39,51 +93,10 @@ export default function ChatBox() {
       message: introMessage,
       isSender: false,
     },
-    {
-      id: 2,
-      name: "Consultor de Estilo",
-      profileImage: assistantProfileImage,
-      lastActive: "agora",
-      message: questions[0],
-      isSender: false,
-    },
   ]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  const isCompleted = currentQuestionIndex >= questions.length;
-
-  const summaryMessage = useMemo(() => {
-    if (!isCompleted) {
-      return "";
-    }
-    const [percepcao, estilos, cores, ocasioes, silhuetas, evitar] = answers;
-    return [
-      "Perfeito! Com base nas suas respostas, criei um perfil inicial:",
-      `• Percepção desejada: ${percepcao || "não informado"}`,
-      `• Estilos/Referências: ${estilos || "não informado"}`,
-      `• Cores preferidas e evitadas: ${cores || "não informado"}`,
-      `• Ocasiões frequentes: ${ocasioes || "não informado"}`,
-      `• Silhuetas preferidas: ${silhuetas || "não informado"}`,
-      `• Peças/tecidos a evitar: ${evitar || "não informado"}`,
-    ].join("\n");
-  }, [answers, isCompleted]);
-
-  useEffect(() => {
-    if (!isCompleted) {
-      return;
-    }
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: prev.length + 1,
-        name: "Consultor de Estilo",
-        profileImage: assistantProfileImage,
-        lastActive: "agora",
-        message: summaryMessage,
-        isSender: false,
-      },
-    ]);
-  }, [isCompleted, summaryMessage]);
+  const summaryMessage = useMemo(() => buildSummary(profile), [profile]);
 
   useEffect(() => {
     if (!scrollRef.current) {
@@ -92,52 +105,101 @@ export default function ChatBox() {
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
 
-  function handleSend() {
+  async function handleSend() {
     const trimmed = input.trim();
-    if (trimmed.length === 0 || isCompleted) {
+    if (trimmed.length === 0 || isCompleted || isLoading) {
       return;
     }
 
-    const nextIndex = currentQuestionIndex + 1;
-    const newMessages: ChatItem[] = [
-      {
-        id: 0,
-        name: "Você",
-        lastActive: "agora",
-        message: trimmed,
-        isSender: true,
-      },
+    const newUserMessage: ChatItem = {
+      id: messages.length + 1,
+      name: "Você",
+      lastActive: "agora",
+      message: trimmed,
+      isSender: true,
+    };
+
+    const updatedChatMessages: ChatMessage[] = [
+      ...chatMessages,
+      { role: "user", content: trimmed },
     ];
 
-    setAnswers((prev) => [...prev, trimmed]);
+    setMessages((prev) => [...prev, newUserMessage]);
+    setChatMessages(updatedChatMessages);
     setInput("");
+    setIsLoading(true);
 
-    if (nextIndex < questions.length) {
-      newMessages.push({
-        id: 0,
+    try {
+      const response = await fetch("/api/style-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: updatedChatMessages,
+          profile,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Falha ao chamar a IA");
+      }
+
+      const data = (await response.json()) as StyleChatResponse;
+
+      const mergedProfile: StyleProfile = {
+        perception: data.profile?.perception ?? profile.perception,
+        styles: data.profile?.styles ?? profile.styles,
+        colorsPreferred: data.profile?.colorsPreferred ?? profile.colorsPreferred,
+        colorsAvoid: data.profile?.colorsAvoid ?? profile.colorsAvoid,
+        occasions: data.profile?.occasions ?? profile.occasions,
+        formality: data.profile?.formality ?? profile.formality,
+        silhouettes: data.profile?.silhouettes ?? profile.silhouettes,
+        materials: data.profile?.materials ?? profile.materials,
+        avoidPieces: data.profile?.avoidPieces ?? profile.avoidPieces,
+      };
+
+      setProfile(mergedProfile);
+
+      const assistantMessage: ChatItem = {
+        id: messages.length + 2,
         name: "Consultor de Estilo",
         profileImage: assistantProfileImage,
         lastActive: "agora",
-        message: questions[nextIndex],
+        message: data.ready
+          ? buildSummary(mergedProfile)
+          : data.assistant_message,
         isSender: false,
-      });
+      };
+
+      const nextChatMessages: ChatMessage[] = [
+        ...updatedChatMessages,
+        { role: "assistant", content: assistantMessage.message },
+      ];
+
+      setMessages((prev) => [...prev, assistantMessage]);
+      setChatMessages(nextChatMessages);
+
+      if (data.ready) {
+        setIsCompleted(true);
+      }
+    } catch {
+      const fallbackMessage: ChatItem = {
+        id: messages.length + 2,
+        name: "Consultor de Estilo",
+        profileImage: assistantProfileImage,
+        lastActive: "agora",
+        message:
+          "Tive um problema ao processar sua mensagem. Pode tentar de novo?",
+        isSender: false,
+      };
+      setMessages((prev) => [...prev, fallbackMessage]);
+    } finally {
+      setIsLoading(false);
     }
-
-    setMessages((prev) => {
-      const baseId = prev.length;
-      const withIds = newMessages.map((message, index) => ({
-        ...message,
-        id: baseId + index + 1,
-      }));
-      return [...prev, ...withIds];
-    });
-
-    setCurrentQuestionIndex(nextIndex);
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] xl:w-3/4">
-      {/* <!-- ====== Chat Box Start --> */}
+    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/3 xl:w-3/4">
       <ChatBoxHeader />
       <div
         ref={scrollRef}
@@ -153,9 +215,11 @@ export default function ChatBox() {
             {!chat.isSender && (
               <div className="w-10 h-10 overflow-hidden rounded-full">
                 {chat.profileImage ? (
-                  <img
+                  <Image
                     src={chat.profileImage}
                     alt={`${chat.name} profile`}
+                    width={40}
+                    height={40}
                     className="object-cover object-center w-full h-full"
                   />
                 ) : null}
@@ -185,9 +249,8 @@ export default function ChatBox() {
         value={input}
         onChange={setInput}
         onSend={handleSend}
-        disabled={isCompleted}
+        disabled={isCompleted || isLoading}
       />
-      {/* <!-- ====== Chat Box End --> */}
     </div>
   );
 }
