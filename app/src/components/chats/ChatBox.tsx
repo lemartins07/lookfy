@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import ChatBoxHeader from "./ChatBoxHeader";
 import ChatBoxSendForm from "./ChatBoxSendForm";
 import type {
@@ -76,6 +77,10 @@ function buildSummary(summaryProfile: StyleProfile) {
   ].join("\n");
 }
 
+function encodeProfile(profile: StyleProfile) {
+  return Buffer.from(JSON.stringify(profile), "utf-8").toString("base64");
+}
+
 export default function ChatBox() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -95,6 +100,7 @@ export default function ChatBox() {
     },
   ]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();
 
   const summaryMessage = useMemo(() => buildSummary(profile), [profile]);
 
@@ -181,6 +187,8 @@ export default function ChatBox() {
 
       if (data.ready) {
         setIsCompleted(true);
+        const encodedProfile = encodeProfile(mergedProfile);
+        router.push(`/style-profile?profile=${encodeURIComponent(encodedProfile)}`);
       }
     } catch {
       const fallbackMessage: ChatItem = {
@@ -199,7 +207,7 @@ export default function ChatBox() {
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/3 xl:w-3/4">
+    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] xl:w-3/4">
       <ChatBoxHeader />
       <div
         ref={scrollRef}
