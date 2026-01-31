@@ -5,23 +5,14 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import {
-  BoxCubeIcon,
-  CalenderIcon,
   ChatIcon,
   ChevronDownIcon,
-  DocsIcon,
   GridIcon,
   HorizontaLDots,
   ListIcon,
-  MailIcon,
-  PageIcon,
-  PieChartIcon,
-  PlugInIcon,
-  TableIcon,
   TaskIcon,
   UserCircleIcon,
 } from "../icons/index";
-import SidebarWidget from "./SidebarWidget";
 
 type NavItem = {
   name: string;
@@ -32,140 +23,49 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
-    icon: <GridIcon />,
-    name: "Dashboard",
+    icon: <ChatIcon />,
+    name: "Onboarding",
     subItems: [
-      { name: "Ecommerce", path: "/", pro: false },
-      { name: "Analytics", path: "/analytics", pro: true },
-      { name: "Marketing", path: "/marketing", pro: true },
-      { name: "CRM", path: "/crm", pro: true },
-      { name: "Stocks", path: "/stocks", new: true, pro: true },
-      { name: "SaaS", path: "/saas", new: true, pro: true },
+      { name: "Definir estilo (chat)", path: "/chat" },
     ],
   },
   {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
+    name: "Guarda-roupa",
+    icon: <ListIcon />,
+    subItems: [
+      { name: "Todas as peças", path: "/wardrobe" },
+      { name: "Adicionar peça", path: "/wardrobe/new" },
+    ],
+  },
+  {
+    name: "Looks",
+    icon: <GridIcon />,
+    subItems: [
+      { name: "Gerar look", path: "/looks/new" },
+      { name: "Meus looks", path: "/looks" },
+    ],
+  },
+  {
+    name: "Compras",
+    icon: <TaskIcon />,
+    subItems: [
+      { name: "Lista sugerida", path: "/shopping-list" },
+    ],
+  },
+  {
+    name: "Insights",
+    icon: <TaskIcon />,
+    subItems: [
+      { name: "Peças pouco usadas", path: "/insights/low-usage" },
+      { name: "Combinações versáteis", path: "/insights/versatile" },
+    ],
   },
   {
     icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
-  },
-  {
-    name: "Task",
-    icon: <TaskIcon />,
+    name: "Configurações",
     subItems: [
-      { name: "List", path: "/task-list", pro: true },
-      { name: "Kanban", path: "/task-kanban", pro: true },
-    ],
-  },
-  {
-    name: "Forms",
-    icon: <ListIcon />,
-    subItems: [
-      { name: "Form Elements", path: "/form-elements", pro: false },
-      { name: "Form Layout", path: "/form-layout", pro: true },
-    ],
-  },
-  {
-    name: "Tables",
-    icon: <TableIcon />,
-    subItems: [
-      { name: "Basic Tables", path: "/basic-tables", pro: false },
-      { name: "Data Tables", path: "/data-tables", pro: true },
-    ],
-  },
-  {
-    name: "Pages",
-    icon: <PageIcon />,
-    subItems: [
-      { name: "File Manager", path: "/file-manager", pro: true },
-      { name: "Pricing Tables", path: "/pricing-tables", pro: true },
-      { name: "Faqs", path: "/faq", pro: true },
-      { name: "Blank Page", path: "/blank", pro: false },
-      { name: "404 Error", path: "/error-404", pro: false },
-      { name: "500 Error", path: "/error-500", pro: true },
-      { name: "503 Error", path: "/error-503", pro: true },
-      { name: "Coming Soon", path: "/coming-soon", pro: true },
-      { name: "Maintenance", path: "/maintenance", pro: true },
-      { name: "Success", path: "/success", pro: true },
-    ],
-  },
-];
-
-const supportItems: NavItem[] = [
-  {
-    icon: <ChatIcon />,
-    name: "Chat",
-    path: "/chat",
-  },
-  {
-    icon: <MailIcon />,
-    name: "Email",
-    subItems: [
-      { name: "Inbox", path: "/inbox" },
-      { name: "Details", path: "/inbox-details" },
-    ],
-  },
-  {
-    icon: <DocsIcon />,
-    name: "Invoice",
-    path: "/invoice",
-  },
-];
-
-const othersItems: NavItem[] = [
-  {
-    icon: <PieChartIcon />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: true },
-      { name: "Bar Chart", path: "/bar-chart", pro: true },
-      { name: "Pie Chart", path: "/pie-chart", pro: true },
-    ],
-  },
-  {
-    icon: <BoxCubeIcon />,
-    name: "UI Elements",
-    subItems: [
-      { name: "Alerts", path: "/alerts", pro: false },
-      { name: "Avatar", path: "/avatars", pro: false },
-      { name: "Badge", path: "/badge", pro: false },
-      { name: "Breadcrumb", path: "/breadcrumb", pro: true },
-      { name: "Buttons", path: "/buttons", pro: false },
-      { name: "Buttons Group", path: "/buttons-group", pro: true },
-      { name: "Cards", path: "/cards", pro: true },
-      { name: "Carousel", path: "/carousel", pro: true },
-      { name: "Dropdowns", path: "/dropdowns", pro: true },
-      { name: "Images", path: "/images", pro: false },
-      { name: "Links", path: "/links", pro: true },
-      { name: "List", path: "/list", pro: true },
-      { name: "Modals", path: "/modals", pro: true },
-      { name: "Notification", path: "/notifications", pro: true },
-      { name: "Pagination", path: "/pagination", pro: true },
-      { name: "Popovers", path: "/popovers", pro: true },
-      { name: "Progressbar", path: "/progress-bar", pro: true },
-      { name: "Ribbons", path: "/ribbons", pro: true },
-      { name: "Spinners", path: "/spinners", pro: true },
-      { name: "Tabs", path: "/tabs", pro: true },
-      { name: "Tooltips", path: "/tooltips", pro: true },
-      { name: "Videos", path: "/videos", pro: false },
-    ],
-  },
-  {
-    icon: <PlugInIcon />,
-    name: "Authentication",
-    subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
-      { name: "Reset Password", path: "/reset-password", pro: true },
-      {
-        name: "Two Step Verification",
-        path: "/two-step-verification",
-        pro: true,
-      },
+      { name: "Perfil & preferências", path: "/settings/profile" },
+      { name: "Conta & login", path: "/settings/account" },
     ],
   },
 ];
@@ -176,7 +76,7 @@ const AppSidebar: React.FC = () => {
 
   const renderMenuItems = (
     navItems: NavItem[],
-    menuType: "main" | "support" | "others"
+    menuType: "main"
   ) => (
     <ul className="flex flex-col gap-4">
       {navItems.map((nav, index) => (
@@ -301,7 +201,7 @@ const AppSidebar: React.FC = () => {
   );
 
   const [openSubmenu, setOpenSubmenu] = useState<{
-    type: "main" | "support" | "others";
+    type: "main";
     index: number;
   } | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
@@ -315,19 +215,13 @@ const AppSidebar: React.FC = () => {
   useEffect(() => {
     // Check if the current path matches any submenu item
     let submenuMatched = false;
-    ["main", "support", "others"].forEach((menuType) => {
-      const items =
-        menuType === "main"
-          ? navItems
-          : menuType === "support"
-          ? supportItems
-          : othersItems;
-      items.forEach((nav, index) => {
+    ["main"].forEach((menuType) => {
+      navItems.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
             if (isActive(subItem.path)) {
               setOpenSubmenu({
-                type: menuType as "main" | "support" | "others",
+                type: menuType as "main",
                 index,
               });
               submenuMatched = true;
@@ -359,7 +253,7 @@ const AppSidebar: React.FC = () => {
 
   const handleSubmenuToggle = (
     index: number,
-    menuType: "main" | "support" | "others"
+    menuType: "main"
   ) => {
     setOpenSubmenu((prevOpenSubmenu) => {
       if (
@@ -440,43 +334,8 @@ const AppSidebar: React.FC = () => {
               </h2>
               {renderMenuItems(navItems, "main")}
             </div>
-
-            <div className="">
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Support"
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
-              {renderMenuItems(supportItems, "support")}
-            </div>
-
-            <div className="">
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Others"
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
-              {renderMenuItems(othersItems, "others")}
-            </div>
           </div>
         </nav>
-        {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null}
       </div>
     </aside>
   );
