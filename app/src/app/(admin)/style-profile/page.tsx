@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import Link from "next/link";
 
 function decodeProfile(encoded: string) {
   try {
@@ -26,14 +26,31 @@ export default async function StyleProfilePage({
     ? params.profile[0]
     : params.profile;
 
-  if (!rawProfile) {
-    notFound();
-  }
-
-  const profile = decodeProfile(rawProfile);
+  const profile = rawProfile ? decodeProfile(rawProfile) : null;
 
   if (!profile) {
-    notFound();
+    return (
+      <div className="mx-auto w-full max-w-3xl space-y-6">
+        <div>
+          <p className="text-sm font-medium text-brand-500">Perfil de estilo</p>
+          <h1 className="text-title-lg font-bold text-gray-800 dark:text-white/90">
+            Nenhum perfil gerado ainda
+          </h1>
+          <p className="mt-2 text-base text-gray-500 dark:text-gray-400">
+            Para ver o resumo, finalize o chat de estilo primeiro.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/chat"
+            className="inline-flex items-center justify-center rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-600"
+          >
+            Ir para o chat
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -48,7 +65,7 @@ export default async function StyleProfilePage({
         </p>
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-xs dark:border-gray-800 dark:bg-white/[0.03]">
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-xs dark:border-gray-800 dark:bg-white/3">
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <p className="text-theme-xs font-medium text-gray-500">Percepção</p>
