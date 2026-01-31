@@ -74,6 +74,34 @@ git clone https://github.com/TailAdmin/free-nextjs-admin-dashboard.git
    yarn dev
    ```
 
+## Banco local com Docker (PostgreSQL)
+
+1. Crie o arquivo `.env` a partir do `.env.example` e ajuste se precisar:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Suba o banco:
+
+   ```bash
+   docker compose up -d
+   ```
+
+3. Para acompanhar os logs:
+
+   ```bash
+   docker compose logs -f postgres
+   ```
+
+4. Para parar e remover os containers:
+
+   ```bash
+   docker compose down
+   ```
+
+As credenciais padrão são `postgres/postgres` e o banco é `lookfy` na porta `5432`.
+
 ## Components
 
 TailAdmin is a pre-designed starting point for building a web-based dashboard using Next.js and Tailwind CSS. The template includes:
