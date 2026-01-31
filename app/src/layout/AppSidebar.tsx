@@ -27,6 +27,7 @@ const navItems: NavItem[] = [
     name: "Onboarding",
     subItems: [
       { name: "Definir estilo (chat)", path: "/chat" },
+      { name: "Resumo do perfil", path: "/style-profile" },
     ],
   },
   {
