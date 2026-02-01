@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import React, { useState } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
@@ -21,7 +22,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
 
   async function handleSignOut() {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await signOut({ redirect: false });
     } catch {
       // Ignore errors on sign out to avoid blocking the UI.
     } finally {

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/lib/contracts/auth";
 import { hashPassword } from "@/lib/auth/password";
-import { createSession } from "@/lib/auth/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,6 +39,7 @@ export async function POST(request: Request) {
   }
 
   const passwordHash = await hashPassword(password);
+  const name = `${firstName} ${lastName}`.trim();
 
   const user = await prisma.user.create({
     data: {
@@ -47,6 +47,7 @@ export async function POST(request: Request) {
       firstName,
       lastName,
       passwordHash,
+      name,
     },
     select: {
       id: true,
@@ -55,8 +56,6 @@ export async function POST(request: Request) {
       lastName: true,
     },
   });
-
-  await createSession(user.id, false);
 
   return NextResponse.json({ user }, { status: 201 });
 }
