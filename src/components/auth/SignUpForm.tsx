@@ -3,12 +3,60 @@ import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
+import { registerSchema } from "@/lib/contracts/auth";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+
+    const parsed = registerSchema.safeParse({
+      firstName,
+      lastName,
+      email,
+      password,
+      acceptTerms,
+    });
+
+    if (!parsed.success) {
+      setError(parsed.error.errors[0]?.message ?? "Dados invalidos");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        setError(data?.error ?? "Falha ao criar conta");
+        return;
+      }
+
+      router.replace("/");
+    } catch {
+      setError("Falha ao criar conta");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full overflow-y-auto no-scrollbar">
       <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
@@ -83,7 +131,7 @@ export default function SignUpForm() {
                 </span>
               </div>
             </div>
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="space-y-5">
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   {/* <!-- First Name --> */}
@@ -96,6 +144,8 @@ export default function SignUpForm() {
                       id="fname"
                       name="fname"
                       placeholder="Enter your first name"
+                      value={firstName}
+                      onChange={(event) => setFirstName(event.target.value)}
                     />
                   </div>
                   {/* <!-- Last Name --> */}
@@ -108,6 +158,8 @@ export default function SignUpForm() {
                       id="lname"
                       name="lname"
                       placeholder="Enter your last name"
+                      value={lastName}
+                      onChange={(event) => setLastName(event.target.value)}
                     />
                   </div>
                 </div>
@@ -121,6 +173,8 @@ export default function SignUpForm() {
                     id="email"
                     name="email"
                     placeholder="Enter your email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
                   />
                 </div>
                 {/* <!-- Password --> */}
@@ -132,6 +186,8 @@ export default function SignUpForm() {
                     <Input
                       placeholder="Enter your password"
                       type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -149,8 +205,8 @@ export default function SignUpForm() {
                 <div className="flex items-center gap-3">
                   <Checkbox
                     className="w-5 h-5"
-                    checked={isChecked}
-                    onChange={setIsChecked}
+                    checked={acceptTerms}
+                    onChange={setAcceptTerms}
                   />
                   <p className="inline-block font-normal text-gray-500 dark:text-gray-400">
                     By creating an account means you agree to the{" "}
@@ -165,8 +221,15 @@ export default function SignUpForm() {
                 </div>
                 {/* <!-- Button --> */}
                 <div>
-                  <button className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
-                    Sign Up
+                  {error && (
+                    <p className="mb-3 text-sm text-error-500">{error}</p>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-60"
+                  >
+                    {isSubmitting ? "Creating account..." : "Sign Up"}
                   </button>
                 </div>
               </div>

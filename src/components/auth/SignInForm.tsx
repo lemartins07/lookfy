@@ -4,12 +4,54 @@ import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
+import { loginSchema } from "@/lib/contracts/auth";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState } from "react";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+
+    const parsed = loginSchema.safeParse({ email, password, remember });
+    if (!parsed.success) {
+      setError(parsed.error.errors[0]?.message ?? "Dados invalidos");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(parsed.data),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        setError(data?.error ?? "Falha ao entrar");
+        return;
+      }
+
+      const nextPath = searchParams.get("next");
+      const safePath = nextPath && nextPath.startsWith("/") ? nextPath : "/";
+      router.replace(safePath);
+    } catch {
+      setError("Falha ao entrar");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">
       <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
@@ -84,13 +126,18 @@ export default function SignInForm() {
                 </span>
               </div>
             </div>
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="space-y-6">
                 <div>
                   <Label>
                     Email <span className="text-error-500">*</span>{" "}
                   </Label>
-                  <Input placeholder="info@gmail.com" type="email" />
+                  <Input
+                    placeholder="info@gmail.com"
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                  />
                 </div>
                 <div>
                   <Label>
@@ -100,6 +147,8 @@ export default function SignInForm() {
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -115,7 +164,7 @@ export default function SignInForm() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Checkbox checked={isChecked} onChange={setIsChecked} />
+                    <Checkbox checked={remember} onChange={setRemember} />
                     <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">
                       Keep me logged in
                     </span>
@@ -127,9 +176,12 @@ export default function SignInForm() {
                     Forgot password?
                   </Link>
                 </div>
+                {error && (
+                  <p className="text-sm text-error-500">{error}</p>
+                )}
                 <div>
-                  <Button className="w-full" size="sm">
-                    Sign in
+                  <Button className="w-full" size="sm" disabled={isSubmitting}>
+                    {isSubmitting ? "Signing in..." : "Sign in"}
                   </Button>
                 </div>
               </div>
