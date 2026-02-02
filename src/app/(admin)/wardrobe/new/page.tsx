@@ -1,10 +1,11 @@
-import ComingSoonSection from "@/components/common/ComingSoonSection";
+import PageBreadcrumb from "@/components/common/PageBreadCrumb";
+import WardrobeForm from "@/components/wardrobe/WardrobeForm";
 
 export default function WardrobeNewPage() {
   return (
-    <ComingSoonSection
-      title="Adicionar peça"
-      description="Estamos preparando o cadastro rápido de peças."
-    />
+    <div className="space-y-6">
+      <PageBreadcrumb pageTitle="Adicionar peça" />
+      <WardrobeForm mode="create" />
+    </div>
   );
 }

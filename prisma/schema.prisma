@@ -20,6 +20,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   accounts      Account[]
   sessions      Session[]
+  wardrobeItems WardrobeItem[]
 }
 
 model Account {
@@ -56,4 +57,21 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model WardrobeItem {
+  id        String   @id @default(cuid())
+  userId    String
+  category  String
+  color     String
+  material  String
+  season    String?
+  tags      String[]
+  imageUrl  String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

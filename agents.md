@@ -17,6 +17,10 @@ O plano deve incluir:
 - testes a adicionar/ajustar
 - migrações (se houver)
 
+Sempre que apresentar opcoes de escolha, incluir uma breve descricao do motivo para usar cada uma e seus trade-offs.
+
+✅ Usar `next/image` para todas as imagens (evitar `<img>`).
+
 ---
 
 ## 1) Princípios do MVP (Next e Nest)
@@ -87,7 +91,7 @@ O plano deve incluir:
 ---
 
 ## 7) Tratamento de erros (padrão único)
-
+exige migração
 - Erros de domínio (core): `DomainError` (ex.: `NotFound`, `Validation`, `Conflict`)
 - Web layer converte erro → status code + body padronizado.
 
