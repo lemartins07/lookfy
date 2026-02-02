@@ -24,7 +24,7 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     icon: <ChatIcon />,
-    name: "Primeiros passos",
+    name: "Onboarding",
     subItems: [
       { name: "Definir estilo (chat)", path: "/chat" },
       { name: "Resumo do perfil", path: "/style-profile" },
@@ -54,7 +54,7 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    name: "Análises",
+    name: "Insights",
     icon: <TaskIcon />,
     subItems: [
       { name: "Peças pouco usadas", path: "/insights/low-usage" },
@@ -175,7 +175,7 @@ const AppSidebar: React.FC = () => {
                                 : "menu-dropdown-badge-inactive"
                             } menu-dropdown-badge `}
                           >
-                            novo
+                            new
                           </span>
                         )}
                         {subItem.pro && (
