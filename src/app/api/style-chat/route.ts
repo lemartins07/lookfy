@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import {
   styleChatRequestSchema,
   styleChatResponseSchema,
-  type StyleProfile,
 } from "@/lib/contracts/style-chat";
+import type { StyleProfile } from "@/lib/contracts/style-profile";
 
 type RateLimitEntry = {
   count: number;
@@ -25,6 +25,7 @@ Objetivo: obter um perfil com os campos:
 - silhouettes
 - materials
 - avoidPieces
+- wardrobeMode (capsula/livre)
 
 Regras:
 - Seja conciso e amigavel.
@@ -32,6 +33,7 @@ Regras:
 - Se o usuario confirmar, responda com um resumo final do perfil e marque ready=true.
 - Caso faltem dados importantes, faca apenas uma pergunta de follow-up por vez.
 - Use o historico e o perfil parcial fornecido para evitar perguntas repetidas.
+- Se o modo de guarda-roupa nao estiver definido, pergunte sobre capsula ou livre.
 
 Retorne SOMENTE JSON no formato especificado.`;
 
@@ -131,6 +133,10 @@ export async function POST(request: Request) {
                   silhouettes: { type: ["string", "null"] },
                   materials: { type: ["string", "null"] },
                   avoidPieces: { type: ["string", "null"] },
+                  wardrobeMode: {
+                    type: ["string", "null"],
+                    enum: ["capsula", "livre", null],
+                  },
                 },
                 required: [
                   "perception",
@@ -142,6 +148,7 @@ export async function POST(request: Request) {
                   "silhouettes",
                   "materials",
                   "avoidPieces",
+                  "wardrobeMode",
                 ],
               },
             },

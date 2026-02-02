@@ -1,15 +1,18 @@
 "use client";
 
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
+import remarkGfm from "remark-gfm";
 import ChatBoxHeader from "./ChatBoxHeader";
 import ChatBoxSendForm from "./ChatBoxSendForm";
 import type {
   ChatMessage,
-  StyleProfile,
   StyleChatResponse,
 } from "@/lib/contracts/style-chat";
+import type { StyleProfile } from "@/lib/contracts/style-profile";
 
 interface ChatItem {
   id: number;
@@ -38,47 +41,62 @@ function formatFormality(value: StyleProfile["formality"]) {
   return value;
 }
 
+function formatWardrobeMode(value: StyleProfile["wardrobeMode"]) {
+  if (!value) {
+    return "não informado";
+  }
+  return value === "capsula" ? "cápsula" : "livre";
+}
+
 function buildSummary(summaryProfile: StyleProfile) {
   return [
     "Perfeito! Com base nas suas respostas, criei um perfil inicial:",
-    `• Percepção desejada: ${formatValue(
+    "",
+    `- Percepção desejada: ${formatValue(
       summaryProfile.perception,
       "não informado"
     )}`,
-    `• Estilos/Referências: ${formatValue(
+    `- Estilos/Referências: ${formatValue(
       summaryProfile.styles,
       "não informado"
     )}`,
-    `• Cores preferidas: ${formatValue(
+    `- Cores preferidas: ${formatValue(
       summaryProfile.colorsPreferred,
       "sem preferência"
     )}`,
-    `• Cores a evitar: ${formatValue(
+    `- Cores a evitar: ${formatValue(
       summaryProfile.colorsAvoid,
       "sem preferência"
     )}`,
-    `• Ocasiões frequentes: ${formatValue(
+    `- Ocasiões frequentes: ${formatValue(
       summaryProfile.occasions,
       "não informado"
     )}`,
-    `• Nível de formalidade: ${formatFormality(summaryProfile.formality)}`,
-    `• Silhuetas preferidas: ${formatValue(
+    `- Nível de formalidade: ${formatFormality(summaryProfile.formality)}`,
+    `- Silhuetas preferidas: ${formatValue(
       summaryProfile.silhouettes,
       "sem preferência"
     )}`,
-    `• Materiais preferidos: ${formatValue(
+    `- Materiais preferidos: ${formatValue(
       summaryProfile.materials,
       "sem preferência"
     )}`,
-    `• Peças/tecidos a evitar: ${formatValue(
+    `- Peças/tecidos a evitar: ${formatValue(
       summaryProfile.avoidPieces,
       "sem preferência"
     )}`,
+    `- Modo de guarda-roupa: ${formatWardrobeMode(summaryProfile.wardrobeMode)}`,
   ].join("\n");
 }
 
 function encodeProfile(profile: StyleProfile) {
-  return Buffer.from(JSON.stringify(profile), "utf-8").toString("base64");
+  const json = JSON.stringify(profile);
+  const bytes = new TextEncoder().encode(json);
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  return btoa(binary);
 }
 
 export default function ChatBox() {
@@ -102,14 +120,38 @@ export default function ChatBox() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
-  const summaryMessage = useMemo(() => buildSummary(profile), [profile]);
-
   useEffect(() => {
     if (!scrollRef.current) {
       return;
     }
     scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadProfile = async () => {
+      try {
+        const response = await fetch("/api/style-profile");
+        if (!response.ok) {
+          return;
+        }
+        const data = (await response.json()) as { profile: StyleProfile | null };
+        if (!isMounted || !data.profile) {
+          return;
+        }
+        setProfile((prev) => ({ ...data.profile, ...prev }));
+      } catch {
+        // Ignore failed prefill.
+      }
+    };
+
+    loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   async function handleSend() {
     const trimmed = input.trim();
@@ -162,6 +204,7 @@ export default function ChatBox() {
         silhouettes: data.profile?.silhouettes ?? profile.silhouettes,
         materials: data.profile?.materials ?? profile.materials,
         avoidPieces: data.profile?.avoidPieces ?? profile.avoidPieces,
+        wardrobeMode: data.profile?.wardrobeMode ?? profile.wardrobeMode,
       };
 
       setProfile(mergedProfile);
@@ -242,7 +285,11 @@ export default function ChatBox() {
                     : "bg-gray-100 dark:bg-white/5 text-gray-800 dark:text-white/90"
                 } ${chat.isSender ? "rounded-tr-sm" : "rounded-tl-sm"}`}
               >
-                <p className="text-sm whitespace-pre-line">{chat.message}</p>
+                <div className="text-sm whitespace-pre-wrap break-words [&_a]:text-brand-600 [&_a]:underline [&_a]:hover:text-brand-700 [&_code]:rounded [&_code]:bg-gray-200 [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-[0.75rem] [&_code]:text-gray-800 [&_pre]:whitespace-pre-wrap [&_pre]:rounded [&_pre]:bg-gray-200 [&_pre]:p-3 [&_pre]:text-[0.75rem] [&_pre]:text-gray-800 [&_ul]:ml-4 [&_ul]:list-disc [&_ol]:ml-4 [&_ol]:list-decimal [&_li]:my-1 dark:[&_code]:bg-white/10 dark:[&_code]:text-white/90 dark:[&_pre]:bg-white/10 dark:[&_pre]:text-white/90">
+                  <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                    {chat.message}
+                  </ReactMarkdown>
+                </div>
               </div>
               <p className="mt-2 text-gray-500 text-theme-xs dark:text-gray-400">
                 {chat.isSender
