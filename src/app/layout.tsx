@@ -4,6 +4,7 @@ import './globals.css';
 import "flatpickr/dist/flatpickr.css";
 import "simplebar-react/dist/simplebar.min.css";
 import "swiper/swiper-bundle.css";
+import AuthSessionProvider from '@/context/AuthSessionProvider';
 import { SidebarProvider } from '@/context/SidebarContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 
@@ -19,9 +20,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${outfit.className} dark:bg-gray-900`}>
-        <ThemeProvider>
-          <SidebarProvider>{children}</SidebarProvider>
-        </ThemeProvider>
+        <AuthSessionProvider>
+          <ThemeProvider>
+            <SidebarProvider>{children}</SidebarProvider>
+          </ThemeProvider>
+        </AuthSessionProvider>
       </body>
     </html>
   );
